@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (PostListView, PostDetailView, PostFromCategory, PostCreateView,
-                    PostUpdateView, CommentCreateView, PostByTagListView)
+                    PostUpdateView, CommentCreateView, PostByTagListView, RatingCreateView)
 
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     path('post/tags/<slug:tag>/', PostByTagListView.as_view(), name='post_by_tags'),
     path('post/tags/<str:tag>/', PostByTagListView.as_view(), name='post_by_tags'),
     path('category/<slug:slug>/', PostFromCategory.as_view(), name="post_by_category"),
+    path('rating/', RatingCreateView.as_view(), name='rating'),
 ]
