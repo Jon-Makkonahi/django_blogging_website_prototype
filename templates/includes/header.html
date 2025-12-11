@@ -1,0 +1,53 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+  <div class="container">
+    <a class="navbar-brand" href="/">Блоггинг 2.0</a>
+  </div>
+
+  <div class='d-flex justify-content-end'>
+    {% if request.user.is_authenticated %}
+      <div class="dropdown me-5">
+
+        <button
+          class="btn btn-secondary dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          >{{ request.user }}
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+          <li>
+            <a
+              class="dropdown-item"
+              href="{% url 'profile_detail' request.user.profile.slug %}"
+              >Мой профиль
+            </a>
+          </li>
+          <li>
+            <a
+              class="dropdown-item"
+              href="{% url 'post_create' %}"
+              >Добавить статью
+            </a>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form action="{% url 'logout' %}" method="POST">
+              {% csrf_token %}
+              <a href="#" class="dropdown-item" onclick="parentNode.submit();">Выход</a>
+            </form>
+          </li>
+        </ul>
+
+      </div>
+
+    {% else %}
+      <ul class="nav me-5">
+        <li><a href="{% url 'login' %}" class="btn btn-secondary  me-1">Вход</a></li>
+        <li><a href="{% url 'register' %}" class="btn btn-secondary">Регистрация</a></li>
+      </ul>
+    {% endif %}
+    
+  </div>
+</nav>
