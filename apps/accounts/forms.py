@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
+from django_recaptcha.fields import ReCaptchaField
 
 from .models import Profile
 
@@ -11,18 +12,22 @@ class UserUpdateForm(forms.ModelForm):
     """
     username = forms.CharField(
         max_length=100,
-        widget=forms.TextInput(attrs={"class": "form-control mb-1"})
+        widget=forms.TextInput(attrs={"class": "form-control mb-1"}),
+        label='Никнейм'
     )
     email = forms.EmailField(
-        widget=forms.TextInput(attrs={"class": "form-control mb-1"})
+        widget=forms.TextInput(attrs={"class": "form-control mb-1"}),
+        label='E-mail'
     )
     first_name = forms.CharField(
         max_length=100,
-        widget=forms.TextInput(attrs={"class": "form-control mb-1"})
+        widget=forms.TextInput(attrs={"class": "form-control mb-1"}),
+        label='Имя'
     )
     last_name = forms.CharField(
         max_length=100,
-        widget=forms.TextInput(attrs={"class": "form-control mb-1"})
+        widget=forms.TextInput(attrs={"class": "form-control mb-1"}),
+        label='Фамилия'        
     )
 
     class Meta:
@@ -44,13 +49,17 @@ class ProfileUpdateForm(forms.ModelForm):
     Форма обновления данных профиля пользователя
     """
     birth_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "form-control mb-1"})
+        widget=forms.TextInput(attrs={"class": "form-control mb-1"}),
+        label='Дата рождения'
     )
     bio = forms.CharField(
         max_length=500,
-        widget=forms.Textarea(attrs={'rows': 5, "class": "form-control mb-1"})
+        widget=forms.Textarea(attrs={'rows': 5, "class": "form-control mb-1"}),
+        label='О себе'
     )
-    avatar = forms.ImageField(widget=forms.FileInput(attrs={"class": "form-control mb-1"}))
+    avatar = forms.ImageField(
+        widget=forms.FileInput(attrs={"class": "form-control mb-1"}),
+        label='Аватар')
 
     class Meta:
         model = Profile
@@ -113,16 +122,18 @@ class UserLoginForm(AuthenticationForm):
     Форма авторизации на сайте
     """
 
+    recaptcha = ReCaptchaField()
+
+    class Meta:
+        model = User
+        fields = ['username', 'password', 'recaptcha']
     def __init__(self, *args, **kwargs):
         """
-        Обновление стилей формы авторизации
+        Обновление атрибутов полей формы регистрации
         """
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs['placeholder'] = 'Логин пользователя'
+        self.fields['username'].widget.attrs['class'] = 'form-control'
         self.fields['password'].widget.attrs['placeholder'] = 'Пароль пользователя'
+        self.fields['password'].widget.attrs['class'] = 'form-control'
         self.fields['username'].label = 'Логин'
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'autocomplete': 'off'
-            })

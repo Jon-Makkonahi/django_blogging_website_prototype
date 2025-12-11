@@ -3,6 +3,8 @@ from django.core.validators import FileExtensionValidator
 from django.contrib.auth.models import User
 from django.urls import reverse
 from mptt.models import MPTTModel, TreeForeignKey
+from taggit.managers import TaggableManager
+from ckeditor.fields import RichTextField
 
 from apps.services.utils import unique_slugify
 
@@ -29,11 +31,13 @@ class Post(models.Model):
     )
     title = models.CharField(max_length=255, verbose_name='Название поста')
     slug = models.SlugField(max_length=255, blank=True, verbose_name='URL')
-    description = models.TextField(max_length=500,
-                                   verbose_name='Краткий текст поста')
+    description = RichTextField(config_name='awesome_ckeditor',
+                                max_length=500,
+                                verbose_name='Краткий текст поста')
     category = TreeForeignKey('Category', on_delete=models.PROTECT,
                               related_name='posts', verbose_name='Категория') 
-    text = models.TextField(verbose_name='Полный текст поста')
+    text = RichTextField(config_name='awesome_ckeditor',
+                         verbose_name='Полный текст поста')
     thumbnail = models.ImageField(
         default='default.jpg',
         blank=True,
@@ -60,6 +64,7 @@ class Post(models.Model):
 
     objects = models.Manager()
     custom = PostManager()
+    tags = TaggableManager()
 
     class Meta:
         db_table = 'blog_post'
@@ -124,3 +129,47 @@ class Category(MPTTModel):
         Возвращение заголовка статьи
         """
         return self.title
+
+
+class Comment(MPTTModel):
+    """
+    Модель древовидных комментариев
+    """
+
+    STATUS_OPTIONS = (
+        ('published', 'Опубликовано'),
+        ('draft', 'Черновик')
+    )
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE,
+                             related_name='comments', verbose_name='Запись')
+    author = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='comments_author',
+                               verbose_name='Автор комментария')
+    content = models.TextField(max_length=3000,
+                               verbose_name='Текст комментария')
+    time_create = models.DateTimeField(auto_now_add=True,
+                                       verbose_name='Время добавления')
+    time_update = models.DateTimeField(auto_now=True,
+                                       verbose_name='Время обновления')
+    status = models.CharField(choices=STATUS_OPTIONS, default='published',
+                              max_length=10, verbose_name='Статус комментария')
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children',
+                            on_delete=models.CASCADE, verbose_name='Родительский комментарий')
+
+    class MPTTMeta:
+        """
+        Сортировка по вложенности
+        """
+        order_insertion_by = ('-time_create',)
+
+    class Meta:
+        """
+        Сортировка, название модели в админ панели, таблица в данными
+        """
+        ordering = ['-time_create']
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return f'{self.author}:{self.content}'
